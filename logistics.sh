@@ -1,8 +1,5 @@
 #!/bin/bash
 
-filename="data"
-
-
 function print_help()
 {
     echo "Usage: logistics FILE [-b|-p|-s {i|n|v|l|b|h}]"
@@ -15,13 +12,32 @@ function print_help()
     echo "  --help display this help and exit"
 }
 
-if [ -n "$2" ] 
+function print_file()
+{
+    while IFS=';' read -r id name weight length width height; do
+        echo "$id $name $weight $length $width $height"
+    done < "$filename".txt
+}
+
+function backup_file()
+{
+    cat $filename.txt > $filename.backup
+}
+
+
+if [ -n "$3" ] 
 then
     echo "För många argument"
     exit
 fi
 
+filename="$1"   #Spara filnamnet
+shift 1         #Flytta argumenten ett steg så getopts ignorerar filnamnet
+
 while getopts "hpb-:" arg; do
+
+    #echo $arg
+
     case $arg in
         -)
             case "${OPTARG}" in
@@ -35,13 +51,11 @@ while getopts "hpb-:" arg; do
             exit
             ;;
         p)
-            while IFS=';' read -r id name weight length width height; do
-                echo "$id $name $weight $length $width $height"
-            done < "$filename".txt
+            print_file
             exit
             ;;
         b)  
-            cat $filename.txt > $filename.backup
+            backup_file
             exit
             ;;
         *)  
@@ -51,4 +65,8 @@ while getopts "hpb-:" arg; do
     esac
 done
 
-echo "please enter an option"
+#Interaktivt läge
+#while true: do
+#    echo Hello, who am I talking to?
+
+#done
