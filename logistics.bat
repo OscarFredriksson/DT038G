@@ -2,32 +2,41 @@
 ::Kod skriven av: Oscar Fredriksson
 ::2018-12-07
 
-
 @ECHO OFF
-title Logistikhanterare
-chcp 65001 >nul
 
+title Logistikhanterare
+
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+
+if "%1"=="" (
+    goto:interactive_mode
+)
+
+if "%1"=="/?" (
+    call:print_help
+)
 
 set filename=%1
 Shift
 
 If not exist %filename% (
     echo Felaktigt filnamn
-    goto:end
+    set filename=
 )
-
 
 :loop
 IF NOT "%1"=="" (
     IF "%1"=="/?" ( 
         goto:print_help 
     ) ELSE IF "%1"=="/print" ( 
-        goto:print_file 
+        goto:print_file
     ) ELSE IF "%1"=="/backup" (
         goto:backup_file
     ) ELSE IF "%1"=="/sort" (
         set column=%2
-        goto:sort_file  
+        goto:sort_file 
     ) ELSE (
         echo Felaktigt tillval 
     )
@@ -35,7 +44,38 @@ IF NOT "%1"=="" (
     Shift
     goto:loop
 )
-goto:end
+goto:eof
+
+:interactive_mode
+ECHO.
+ECHO Vad vill du göra?
+ECHO (p): skriva ut innehållet i filen  (b): göra en backup av filen
+ECHO (s): sortera filen (h): skriva ut hjälptext (e): avsluta programmet
+
+set /P "input=Skriv en bokstav: "
+
+IF %input%==p (
+    call:get_filename
+    call:print_file
+) ELSE IF %input%==b (
+    call:get_filename
+    call:backup_file 
+) ELSE IF %input%==s (
+    call:get_filename
+    ECHO .
+    ECHO Vilken kolumn vill du sortera på?
+    ECHO i: ID, n: Namn, v: Vikt, l: Längd, b: Bredd, h: höjd          
+    set /P "column=Skriv en bokstav: "
+    call:sort_file
+) ELSE IF %input%==h (
+    call:print_help
+) ELSE IF %input%==e (
+    goto:eof
+) ELSE (
+    ECHO felaktig inmatning
+)
+goto:interactive_mode
+
 
 :print_help
 ECHO Används för logistikhantering.
@@ -51,6 +91,15 @@ ECHO             b efter bredd              h efter höjd
 ECHO:/? Skriver ut den här hjälptexten.
 goto:eof
 
+:get_filename
+set /P "filename=Skriv in filnamn: "
+
+if not exist %filename% (
+    echo felaktigt filnamn
+    goto:get_filename
+)
+goto:eof
+
 :print_file
 for /f "tokens= 1,2,3,4,5,6 delims=;" %%a in (%filename%) do (
     echo %%a %%b %%c %%d %%e %%f
@@ -64,24 +113,100 @@ copy %filename% %backupname%
 goto:eof
 
 :sort_file
+
 IF "%column%"=="i" ( 
     sort %filename% /O %filename%
 ) ELSE IF "%column%"=="n" ( 
-    set /P "header=" < %filename%
-    echo %header%
-    for /F "skip=1 tokens=1-3 delims=;" %%a in (%filename%) do set a[%%a,%%b]=%%c
-    for /F "tokens=2-4 delims=[;]=" %%a in ('set a[') do echo %%a,%%b,%%c
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
+            echo %%B;%%A;%%C;%%D;%%E;%%F
+        )
+    ) > %filename%.tmp
+
+    sort %filename%.tmp /O %filename%.tmp
+
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+            echo %%B;%%A;%%C;%%D;%%E;%%F
+        )
+    ) > %filename%
+    del "%filename%.tmp"
+
 ) ELSE IF "%column%"=="v" (
-    echo hej
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
+            echo %%C;%%B;%%A;%%D;%%E;%%F
+        )
+    ) > %filename%.tmp
+
+    sort %filename%.tmp /O %filename%.tmp
+
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+
+            echo %%C;%%B;%%A;%%D;%%E;%%F
+        )
+    ) > %filename%
+    del "%filename%.tmp"
+
 ) ELSE IF "%column%"=="l" (
-    echo hej  
+    (
+
+        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
+
+            echo %%D;%%B;%%C;%%A;%%E;%%F
+        )
+    ) > %filename%.tmp
+
+    sort %filename%.tmp /O %filename%.tmp
+
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+
+            echo %%D;%%B;%%C;%%A;%%E;%%F
+        )
+    ) > %filename% 
+    del "%filename%.tmp" 
+
 ) ELSE IF "%column%"=="b" (
-    echo hej
+    (
+
+        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
+
+            echo %%E;%%B;%%C;%%D;%%A;%%F
+        )
+    ) > %filename%.tmp
+
+    sort %filename%.tmp /O %filename%.tmp
+
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+
+            echo %%E;%%B;%%C;%%D;%%A;%%F
+        )
+    ) > %filename%
+    del "%filename%.tmp"
+
 ) ELSE IF "%column%"=="h" (
-    echo hej
+    (
+
+        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
+
+            echo %%F;%%B;%%C;%%D;%%E;%%A
+        )
+    ) > %filename%.tmp
+
+    sort %filename%.tmp /O %filename%.tmp
+
+    (
+        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+
+            echo %%F;%%B;%%C;%%D;%%E;%%A
+        )
+    ) > %filename%
+    del "%filename%.tmp"
+
 ) ELSE (
     echo Felaktigt kolumnval
 )
 goto:eof
-
-:end
