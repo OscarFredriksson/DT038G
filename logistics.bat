@@ -117,20 +117,8 @@ goto:eof
 IF "%column%"=="i" ( 
     sort %filename% /O %filename%
 ) ELSE IF "%column%"=="n" ( 
-    (
-        for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (       
-            echo %%B;%%A;%%C;%%D;%%E;%%F
-        )
-    ) > %filename%.tmp
 
-    sort %filename%.tmp /O %filename%.tmp
-
-    (
-        for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
-            echo %%B;%%A;%%C;%%D;%%E;%%F
-        )
-    ) > %filename%
-    del "%filename%.tmp"
+    set toswap=col1
 
 ) ELSE IF "%column%"=="v" (
     (
@@ -208,5 +196,37 @@ IF "%column%"=="i" (
 
 ) ELSE (
     echo Felaktigt kolumnval
+    goto:eof
 )
+
+ set sortcol=1
+echo !sortcol! >test
+
+for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (
+    set col1=%%A
+    set col2=%%B
+
+    set tmp=!toswap!
+    set col1=!toswap!
+    set toswap=!tmp!
+
+    rem echo !sortcol! >test
+    echo col!sortcol! >test
+
+    rem echo !col1!;!col2!;%%C;%%D;%%E;%%F 
+)
+) > %filename%.tmp
+
+sort %filename%.tmp /O %filename%.tmp
+
+(
+for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
+    set tmp=%%A
+    set %%A=%%B
+    set %%B=!tmp!
+    echo %%A;%%B;%%C;%%D;%%E;%%F 
+)
+) > %filename%.result
+Rem del "%filename%.tmp"
+
 goto:eof
