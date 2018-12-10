@@ -103,6 +103,8 @@ if not exist %filename% (
 goto:eof
 
 :print_file
+echo ID      Namn             Vikt     L       B       H
+
 for /f "tokens= 1,2,3,4,5,6 delims=;" %%a in (%filename%) do (
     echo %%a %%b %%c %%d %%e %%f
 )
