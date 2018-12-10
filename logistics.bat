@@ -11,8 +11,11 @@ setlocal enabledelayedexpansion
 
 
 if "%1"=="" (
-    echo Skriv in ett filnamn
     goto:eof
+)
+
+if "%1"=="/?" (
+    goto:print_help
 )
 
 set filename=%1
