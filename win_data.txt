@@ -1,0 +1,7 @@
+052     Hyllplan         1200   100      30       2             
+149     Bankskiva        3650   180     100       5             
+182     Pelarbord        1600    60      60      70             
+163     Skrivbord       25800   120      60      70             
+077     Bokhylla         5000   120      30      80             
+096     Skap            15000    80     400      85             
+146     Vit Garderob     9000    80      60     200             

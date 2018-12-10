@@ -11,11 +11,8 @@ setlocal enabledelayedexpansion
 
 
 if "%1"=="" (
-    goto:interactive_mode
-)
-
-if "%1"=="/?" (
-    call:print_help
+    echo Skriv in ett filnamn
+    goto:eof
 )
 
 set filename=%1
@@ -23,7 +20,11 @@ Shift
 
 If not exist %filename% (
     echo Felaktigt filnamn
-    set filename=
+    goto:eof
+)
+
+if "%1"=="" (
+    call:interactive_mode
 )
 
 :loop
@@ -55,13 +56,10 @@ ECHO (s): sortera filen (h): skriva ut hjälptext (e): avsluta programmet
 set /P "input=Skriv en bokstav: "
 
 IF %input%==p (
-    call:get_filename
     call:print_file
 ) ELSE IF %input%==b (
-    call:get_filename
     call:backup_file 
 ) ELSE IF %input%==s (
-    call:get_filename
     ECHO .
     ECHO Vilken kolumn vill du sortera på?
     ECHO i: ID, n: Namn, v: Vikt, l: Längd, b: Bredd, h: höjd          
@@ -89,6 +87,7 @@ ECHO             i efter produktnummer      n efter namn
 ECHO             v efter vikt               l efter längd
 ECHO             b efter bredd              h efter höjd
 ECHO:/? Skriver ut den här hjälptexten.
+pause
 goto:eof
 
 :get_filename
@@ -104,19 +103,22 @@ goto:eof
 for /f "tokens= 1,2,3,4,5,6 delims=;" %%a in (%filename%) do (
     echo %%a %%b %%c %%d %%e %%f
 )
+pause
 goto:eof
 
 
 :backup_file
 FOR %%i IN ("%filename%") DO ( set backupname=%%~ni.backup )    
 copy %filename% %backupname%
+pause
 goto:eof
 
 :sort_file
 
 IF "%column%"=="i" ( 
-    sort %filename% /O %filename%
-    goto:eof
+    
+    set sortcol=1
+
 ) ELSE IF "%column%"=="n" ( 
 
     set sortcol=2
@@ -142,57 +144,30 @@ IF "%column%"=="i" (
     goto:eof
 )
 
+echo ID      Namn             Vikt     L       B       H
+
 (
-    for /F "tokens=1-6 delims=;" %%A in (%filename%) DO (
-        set col1=%%A
-        set col2=%%B
-        set col3=%%C
-        set col4=%%D
-        set col5=%%E
-        set col6=%%F
-
-
-        IF %sortcol%==2 (
-            echo !col2!;!col1!;!col3!;!col4!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==3 (
-            echo !col3!;!col2!;!col1!;!col4!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==4 (
-            echo !col4!;!col2!;!col3!;!col1!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==5 (
-            echo !col5!;!col2!;!col3!;!col4!;!col1!;!col6! 
-        ) ELSE IF %sortcol%==6 (
-            echo !col6!;!col2!;!col3!;!col4!;!col5!;!col1! 
-        )
-
-        
+    for /F "tokens=1-6 delims=;" %%a in (%filename%) DO (
+        echo %%a    %%b     %%c     %%d     %%e     %%f
     )
 ) > %filename%.tmp
 
-sort %filename%.tmp /O %filename%.tmp
-(
-    for /F "tokens=1-6 delims=;" %%A in (%filename%.tmp) DO (
-        set col1=%%A
-        set col2=%%B
-        set col3=%%C
-        set col4=%%D
-        set col5=%%E
-        set col6=%%F
-
-
-        IF %sortcol%==2 (
-            echo !col2!;!col1!;!col3!;!col4!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==3 (
-            echo !col3!;!col2!;!col1!;!col4!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==4 (
-            echo !col4!;!col2!;!col3!;!col1!;!col5!;!col6! 
-        ) ELSE IF %sortcol%==5 (
-            echo !col5!;!col2!;!col3!;!col4!;!col1!;!col6! 
-        ) ELSE IF %sortcol%==6 (
-            echo !col6!;!col2!;!col3!;!col4!;!col5!;!col1! 
-        )
-    )
-) > %filename%
+IF %sortcol%==1 (
+    sort %filename%.tmp 
+) ELSE IF %sortcol%==2 (
+    sort %filename%.tmp /+9
+) ELSE IF %sortcol%==3 (
+    sort %filename%.tmp /+25
+) ELSE IF %sortcol%==4 (
+    sort %filename%.tmp /+33
+) ELSE IF %sortcol%==5 (
+    sort %filename%.tmp /+41
+) ELSE IF %sortcol%==6 (
+    sort %filename%.tmp /+49
+)
 
 del "%filename%.tmp"
+
+pause
 
 goto:eof
