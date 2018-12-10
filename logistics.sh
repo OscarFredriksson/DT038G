@@ -23,7 +23,6 @@ function validate_filename()
     then
         return 0
     else
-        
         return -1
     fi
 }
@@ -48,9 +47,10 @@ function get_filename()
 function print_file()
 {
     echo ""
+    echo "ID       Name           Weight     L       W       H"
     while IFS=';' read -r id name weight length width height; do
-        echo "$id $name $weight $length $width $height"
-    done < "$filename"
+        echo -e "$id \t $name \t $weight \t $length \t $width \t $height"
+    done < $1
     echo ""
 }
 
@@ -59,29 +59,34 @@ function backup_file()
     backupname="${filename%.*}.backup"   #Tar bort filändelsen och lägger till .backup istället
 
     cat $filename > $backupname
+
+    echo "Created a backup of $filename"
 }
 
 function sort_file()
 {
+    cat $filename > $filename.tmp
+
     case $1 in
         i)
-            sort -n -t $';' -o $filename $filename;;
+            sort -n -t $';' -o $filename.tmp $filename.tmp;;
         n)
-            sort -k2,2 -t $';' -o $filename $filename;; 
+            sort -b -k2,2 -t  $';' -o $filename.tmp $filename.tmp;; 
         v)
-            sort -k3,3 -n -t $';' -o $filename $filename;; 
+            sort -k3,3 -n -t $';' -o $filename.tmp $filename.tmp;; 
         l)
-            sort -k4,4 -n -t $';' -o $filename $filename;; 
+            sort -k4,4 -n -t $';' -o $filename.tmp $filename.tmp;; 
         b)
-            sort -k5,5 -n -t $';' -o $filename $filename.;; 
+            sort -k5,5 -n -t $';' -o $filename.tmp $filename.tmp;; 
         h)
-            sort -k6,6 -n -t $';' -o $filename $filename;;
+            sort -k6,6 -n -t $';' -o $filename.tmp $filename.tmp;;
         *)
             echo "invalid column to sort on"
             return -1;;
     esac
     
-
+    print_file $filename.tmp
+    rm $filename.tmp
 
     return 0
 }
@@ -90,6 +95,7 @@ function interactive_menu()
 {
     while true; do
         
+        echo ""
         echo "What do you want to do?"
         echo "(p): print file content, (b): backup file, (s): sort file, (h): print help text, (e): exit program" 
         echo "Enter an option:"
@@ -99,13 +105,10 @@ function interactive_menu()
             h)
                 print_help;;
             p)
-                get_filename
-                print_file;;
+                print_file $filename;;
             b)
-                get_filename
                 backup_file;;
             s)
-                get_filename
                 while true; do
                     echo "What do you want to sort on?"
                     echo "(i): ID, (n): name, (v): weight, (l):length, (b): width, (h): height"
@@ -131,7 +134,14 @@ function interactive_menu()
 }
 
 if [ -z "$1" ]
-then interactive_menu
+then
+    exit
+fi
+
+if [ "$1" == "--help" ]
+then
+    print_help
+    exit
 fi
 
 filename="$1"   #Spara filnamnet
@@ -144,6 +154,10 @@ then
 fi
 
 shift 1         #Flytta argumenten ett steg så getopts ignorerar filnamnet
+
+if [ -z "$1" ]
+then interactive_menu
+fi
 
 while getopts "hpbs:-:" arg; do
     case $arg in
@@ -159,7 +173,7 @@ while getopts "hpbs:-:" arg; do
             exit
             ;;
         p)
-            print_file
+            print_file "$filename"
             exit
             ;;
         b)  
@@ -176,6 +190,3 @@ while getopts "hpbs:-:" arg; do
             ;;
     esac
 done
-
-
-#############################################################################################################################################################################################################################################################
